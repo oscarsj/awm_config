@@ -42,6 +42,17 @@ do
 end
 -- }}}
 
+-- Override awesome.quit when we're using GNOME
+_awesome_quit = awesome.quit
+awesome.quit = function()
+    if os.getenv("DESKTOP_SESSION") == "awesome-gnome" then
+       os.execute("/usr/bin/gnome-session-quit") -- for Ubuntu 14.04
+       os.execute("pkill -9 gnome-session") -- I use this on Ubuntu 16.04
+    else
+    _awesome_quit()
+    end
+end
+
 -- {{{ Variable definitions
 -- This is used later as the default terminal and editor to run.
 terminal = "urxvt"
@@ -247,7 +258,7 @@ awful.screen.connect_for_each_screen(function(s)
     set_wallpaper(s)
 
     -- Each screen has its own tag table.
-    awful.tag({ "1", "2", "3", "4", "5", "6", "7", "8", "9" }, s, awful.layout.layouts[1])
+    awful.tag({ "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" }, s, awful.layout.layouts[1])
 
     -- Create a promptbox for each screen
     s.mypromptbox = awful.widget.prompt{prompt = "> " }
@@ -389,6 +400,7 @@ globalkeys = gears.table.join(
     awful.key({ modkey, "Shift"   }, "space", function () awful.layout.inc(-1)                end,
               {description = "select previous", group = "layout"}),
 
+    awful.key({ }, "F12", function () awful.util.spawn("xscreensaver-command -lock") end),
     awful.key({ modkey, "Control" }, "n",
               function ()
                   local c = awful.client.restore()
@@ -805,11 +817,11 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
 )))
 
 -- Tags are distributed among screens
-my_modules("awm_distributed_tags")
+-- my_modules("awm_distributed_tags")
 
 -- }}}
 
-
+awful.util.spawn("nm-applet")
 -------------
 -- CHANGES --
 --- REMOVED: Mod4+w Keybind to open awesome menu removed
