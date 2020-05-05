@@ -14,8 +14,13 @@ local hotkeys_popup = require("awful.hotkeys_popup").widget
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
 
+
 -- My module loader
 local my_modules = require("awm_kmodules")
+
+-- Load Debian menu entries
+local debian = require("debian.menu")
+local has_fdo, freedesktop = pcall(require, "freedesktop")
 
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -42,29 +47,19 @@ do
 end
 -- }}}
 
--- Override awesome.quit when we're using GNOME
-_awesome_quit = awesome.quit
-awesome.quit = function()
-    if os.getenv("DESKTOP_SESSION") == "awesome-gnome" then
-       os.execute("/usr/bin/gnome-session-quit") -- for Ubuntu 14.04
-       os.execute("pkill -9 gnome-session") -- I use this on Ubuntu 16.04
-    else
-    _awesome_quit()
-    end
-end
-
 -- {{{ Variable definitions
--- This is used later as the default terminal and editor to run.
-terminal = "urxvt"
-editor = os.getenv("EDITOR") or "nano"
-editor_cmd = terminal .. " -e " .. editor
-
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
 require("theme_customizer")
 
+
 -- Safe require
 require("safe_require")
+
+-- This is used later as the default terminal and editor to run.
+terminal = "sakura"
+editor = os.getenv("EDITOR") or "editor"
+editor_cmd = terminal .. " -e " .. editor
 
 -- Default modkey.
 -- Usually, Mod4 is the key with a logo between Control and Alt.
@@ -75,19 +70,19 @@ modkey = "Mod4"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
 awful.layout.layouts = {
-    -- awful.layout.suit.floating,
-    -- awful.layout.suit.tile,
+--    awful.layout.suit.floating,
+--    awful.layout.suit.tile,
     awful.layout.suit.tile.left,
     awful.layout.suit.tile.bottom,
-    -- awful.layout.suit.tile.top,
+--    awful.layout.suit.tile.top,
     awful.layout.suit.fair,
-    -- awful.layout.suit.fair.horizontal,
-    -- awful.layout.suit.spiral,
-    -- awful.layout.suit.spiral.dwindle,
+--    awful.layout.suit.fair.horizontal,
+--    awful.layout.suit.spiral,
+--    awful.layout.suit.spiral.dwindle,
     awful.layout.suit.max,
-    -- awful.layout.suit.max.fullscreen,
-    -- awful.layout.suit.magnifier,
-    -- awful.layout.suit.corner.nw,
+    awful.layout.suit.max.fullscreen,
+--    awful.layout.suit.magnifier,
+--    awful.layout.suit.corner.nw,
     -- awful.layout.suit.corner.ne,
     -- awful.layout.suit.corner.sw,
     -- awful.layout.suit.corner.se,
@@ -119,26 +114,34 @@ myawesomemenu = {
    { "quit", function() awesome.quit() end}
 }
 
-mymainmenu = awful.menu({ items = { { "awesome", myawesomemenu, beautiful.awesome_icon },
-                                    safe_require("debian.menu") and { "Debian", debian.menu.Debian_menu.Debian },
-                                    { "OPEN: terminal", terminal },
-                                    { "OPEN: file", "thunar" },
-                                    { "OPEN: Chromium", "chromium" },
-                                    { "OPEN: VLC", "vlc" },
-                                    { "OPEN: Steam", "steam" },
-                                    { "TAG: toggle float", function()
-                                       local t = awful.screen.focused().selected_tag
-                                       if t.layout == awful.layout.suit.floating then
-                                          t.layout = awful.layout.layouts[1]
-                                       else
-                                          t.layout = awful.layout.suit.floating
-                                       end
-                                    end},
-                                    { "SESSION: shutdown", "poweroff"},
-                                    { "SESSION: reboot", "reboot"},
-                                    { "SESSION: lock", "bash -c 'xset dpms force off && slock'"},
-                                  }
-                        })
+local menu_awesome = { "awesome", myawesomemenu, beautiful.awesome_icon }
+local menu_terminal = {
+      { "Open: terminal", terminal },
+      { "Open: file", "thunar" },
+      { "Open: Chrome", "google-chrome" },
+      { "Open: VLC", "vlc" },
+      { "Open: Steam", "steam" },
+      { "SESSION: shutdown", "poweroff"},
+      { "SESSION: reboot", "reboot"},
+      { "SESSION: lock", "gnome-screensaver-command -l"},
+      { "SESSION: suspend", "systemctl suspend"}
+}
+
+if has_fdo then
+    mymainmenu = freedesktop.menu.build({
+        before = { menu_awesome },
+        after = menu_terminal 
+    })
+else
+    mymainmenu = awful.menu({
+        items = {
+                  menu_awesome,
+                  { "Debian", debian.menu.Debian_menu.Debian },
+                  menu_terminal,
+                }
+    })
+end
+
 
 mylauncher = awful.widget.launcher({ image = beautiful.awesome_icon,
                                      menu = mymainmenu })
@@ -148,12 +151,12 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 -- }}}
 
 -- Keyboard map indicator and switcher
--- mykeyboardlayout = awful.widget.keyboardlayout()
+mykeyboardlayout = awful.widget.keyboardlayout()
 
 -- {{{ Wibar
-
 -- Create a textclock widget
 mytextclock = wibox.widget.textclock(" %b %d - %R ", 45)
+
 
 -- Audio widget
 local volume_widget = my_modules("awm_simple_amixer_volume")
@@ -183,7 +186,9 @@ local mem_widget = monitor_graph("free", 5,
    beautiful.bg_urgent,
    {forced_width = 25}
 )
-local fs_widget = require("fs_widget")
+
+-- local fs_widget = require("fs_widget")
+local fs_widget = require("awesome-wm-widgets.fs-widget.fs-widget")
 local battery_widget = my_modules("awm_battery_widget")
 local battery_widget_left_sep = battery_widget and beautiful.create_separator_widget(false, true)
 local battery_widget_right_sep = battery_widget and beautiful.create_separator_widget(true, true)
@@ -258,11 +263,18 @@ awful.screen.connect_for_each_screen(function(s)
     set_wallpaper(s)
 
     -- Each screen has its own tag table.
-    awful.tag({ "一", "二", "三", "四", "五", "六", "七", "八", "九", "十" }, s, awful.layout.layouts[1])
+    awful.tag({ "一", "二", "三", "四", "五", "六", "七", "八", "九"}, s, awful.layout.layouts[1])
 
     -- Create a promptbox for each screen
-    s.mypromptbox = awful.widget.prompt{prompt = "> " }
-
+    s.mypromptbox = awful.widget.prompt({prompt = "> " })
+    -- Create an imagebox widget which will contain an icon indicating which layout we're using.
+    -- We need one layoutbox per screen.
+    s.mylayoutbox = awful.widget.layoutbox(s)
+    s.mylayoutbox:buttons(gears.table.join(
+                           awful.button({ }, 1, function () awful.layout.inc( 1) end),
+                           awful.button({ }, 3, function () awful.layout.inc(-1) end),
+                           awful.button({ }, 4, function () awful.layout.inc( 1) end),
+                           awful.button({ }, 5, function () awful.layout.inc(-1) end)))
     -- Create a taglist widget
     s.mytaglist = awful.widget.taglist(s, awful.widget.taglist.filter.all, taglist_buttons)
 
@@ -270,8 +282,8 @@ awful.screen.connect_for_each_screen(function(s)
     s.mytasklist = awful.widget.tasklist(s, awful.widget.tasklist.filter.currenttags, tasklist_buttons)
 
     -- Create the wibox
-    s.mywibox = awful.wibar({ position = "top", screen = s, height = beautiful.wibar_height })
-
+    s.mywibox = awful.wibar({ position = "top", screen = s, height = beautiful.wibar_height})
+    --
     -- Systray separators widget
     systray_widget_separators_by_screen_id.left[s]  = beautiful.create_separator_widget(false, true)
     systray_widget_separators_by_screen_id.right[s] = beautiful.create_separator_widget(true, true)
@@ -290,34 +302,36 @@ awful.screen.connect_for_each_screen(function(s)
             s.mytaglist,
             beautiful.separator_widget_right,
             s.mypromptbox,
-        },
-        s.mytasklist, -- Middle widget
-        { -- Right widgets
+         },
+         s.mytasklist, -- Middle widget
+         { -- Right widgets
             layout = wibox.layout.fixed.horizontal,
             beautiful.separator_widget_left,
             mykeyboardlayout,
             mykeyboardlayout and beautiful.separator_widget_right_serif,
             mykeyboardlayout and beautiful.separator_widget_left_serif,
-            volume_widget,
-            beautiful.separator_widget_right_serif,
-            cpu_widget and beautiful.separator_widget_left_serif,
-            cpu_widget,
-            cpu_widget and beautiful.separator_widget_right_serif,
-            mem_widget and beautiful.separator_widget_left_serif,
+	    volume_widget,
+	    beautiful.separator_widget_right_serif,
+	    cpu_widget and beautiful.separator_widget_left_serif,
+	    cpu_widget,
+	    cpu_widget and beautiful.separator_widget_right_serif,
+	    mem_widget and beautiful.separator_widget_left_serif,
             mem_widget,
             mem_widget and beautiful.separator_widget_right_serif,
-            fs_widget and beautiful.separator_widget_left_serif,
-            fs_widget,
-            fs_widget and beautiful.separator_widget_right_serif,
+  --          fs_widget and beautiful.separator_widget_left_serif,
+--            fs_widget(),
+--            fs_widget and beautiful.separator_widget_right_serif,
             battery_widget_left_sep,
             battery_widget,
             battery_widget_right_sep,
-            systray_widget_separators_by_screen_id.left[s],
+--	    systray_widget_separators_by_screen_id.left[s],
             wibox.widget.systray(),
-            systray_widget_separators_by_screen_id.right[s],
+--          systray_widget_separators_by_screen_id.right[s],
             beautiful.separator_widget_left_serif,
             mytextclock,
             beautiful.separator_widget_right,
+	    s.mylayoutbox,
+            beautiful.separator_widget_left,
         },
     }
 end)
@@ -335,10 +349,10 @@ root.buttons(gears.table.join(
 globalkeys = gears.table.join(
     awful.key({ modkey,           }, "s",      hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
-    -- awful.key({ modkey,           }, "Left",   awful.tag.viewprev,
-    --           {description = "view previous", group = "tag"}),
-    -- awful.key({ modkey,           }, "Right",  awful.tag.viewnext,
-    --           {description = "view next", group = "tag"}),
+    awful.key({ modkey,           }, "Left",   awful.tag.viewprev,
+              {description = "view previous", group = "tag"}),
+    awful.key({ modkey,           }, "Right",  awful.tag.viewnext,
+              {description = "view next", group = "tag"}),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore,
               {description = "go back", group = "tag"}),
 
@@ -354,6 +368,8 @@ globalkeys = gears.table.join(
         end,
         {description = "focus previous by index", group = "client"}
     ),
+    awful.key({ modkey,           }, "w", function () mymainmenu:show() end,
+              {description = "show main menu", group = "awesome"}),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end,
@@ -364,8 +380,8 @@ globalkeys = gears.table.join(
               {description = "focus the next screen", group = "screen"}),
     awful.key({ modkey, "Control" }, "k", function () awful.screen.focus_relative(-1) end,
               {description = "focus the previous screen", group = "screen"}),
-    -- awful.key({ modkey,           }, "u", awful.client.urgent.jumpto,
-    --           {description = "jump to urgent client", group = "client"}),
+    awful.key({ modkey,           }, "u", awful.client.urgent.jumpto,
+              {description = "jump to urgent client", group = "client"}),
     awful.key({ modkey,           }, "Tab",
         function ()
             awful.client.focus.history.previous()
@@ -376,7 +392,7 @@ globalkeys = gears.table.join(
         {description = "go back", group = "client"}),
 
     -- Standard program
-    awful.key({ modkey,           }, "Return", require("cwd_spawn"),
+    awful.key({ modkey,           }, "Return", function () awful.spawn(terminal) end,
               {description = "open a terminal", group = "launcher"}),
     awful.key({ modkey, "Control" }, "r", awesome.restart,
               {description = "reload awesome", group = "awesome"}),
@@ -400,7 +416,6 @@ globalkeys = gears.table.join(
     awful.key({ modkey, "Shift"   }, "space", function () awful.layout.inc(-1)                end,
               {description = "select previous", group = "layout"}),
 
-    awful.key({ }, "F12", function () awful.util.spawn("xscreensaver-command -lock") end),
     awful.key({ modkey, "Control" }, "n",
               function ()
                   local c = awful.client.restore()
@@ -413,24 +428,24 @@ globalkeys = gears.table.join(
               {description = "restore minimized", group = "client"}),
 
     -- Prompt
-    awful.key({ modkey },            "r",
-              function ()
-                  local promptbox =  awful.screen.focused().mypromptbox
-                  -- promptbox:run()
-                  awful.prompt.run {
-                      prompt              = promptbox.prompt,
-                      textbox             = promptbox.widget,
-                      completion_callback = require("awful.completion").shell,
-                      history_path        = require("gears.filesystem").get_cache_dir() .. "/history",
-                      exe_callback        = function (...) promptbox:spawn_and_handle_error(...) end,
-                      done_callback       = function () gears.timer.start_new(5, function() promptbox.widget:set_markup("") end) end,
-                  }
-              end,
+    awful.key({ modkey },            "r",     function () awful.screen.focused().mypromptbox:run() end,
               {description = "run prompt", group = "launcher"}),
 
+    awful.key({ modkey }, "x",
+              function ()
+                  awful.prompt.run {
+                    prompt       = "Run Lua code: ",
+                    textbox      = awful.screen.focused().mypromptbox.widget,
+                    exe_callback = awful.util.eval,
+                    history_path = awful.util.get_cache_dir() .. "/history_eval"
+                  }
+              end,
+              {description = "lua execute prompt", group = "awesome"}),
     -- Menubar
     awful.key({ modkey }, "p", function() menubar.show() end,
-              {description = "show the menubar", group = "launcher"})
+              {description = "show the menubar", group = "launcher"}),
+
+    awful.key({ }, "F12", function () awful.util.spawn("gnome-screensaver-command -l") end)
 )
 
 clientkeys = gears.table.join(
@@ -448,6 +463,8 @@ clientkeys = gears.table.join(
               {description = "move to master", group = "client"}),
     awful.key({ modkey,           }, "o",      function (c) c:move_to_screen()               end,
               {description = "move to screen", group = "client"}),
+    awful.key({ modkey,           }, "t",      function (c) c.ontop = not c.ontop            end,
+              {description = "toggle keep on top", group = "client"}),
     awful.key({ modkey,           }, "n",
         function (c)
             -- The client currently has the input focus, so it cannot be
@@ -543,11 +560,11 @@ awful.rules.rules = {
                      border_color = beautiful.border_normal,
                      focus = awful.client.focus.filter,
                      raise = true,
-                     size_hints_honor = false,
                      keys = clientkeys,
                      buttons = clientbuttons,
                      screen = awful.screen.preferred,
-                     placement = awful.placement.no_overlap+awful.placement.no_offscreen
+                     placement = awful.placement.no_overlap+awful.placement.no_offscreen,
+		     size_hints_honor = false
      }
     },
 
@@ -637,6 +654,7 @@ client.connect_signal("request::titlebars", function(c)
             awful.titlebar.widget.floatingbutton (c),
             awful.titlebar.widget.maximizedbutton(c),
             awful.titlebar.widget.stickybutton   (c),
+            awful.titlebar.widget.ontopbutton    (c),
             awful.titlebar.widget.closebutton    (c),
             layout = wibox.layout.fixed.horizontal()
         },
@@ -652,6 +670,8 @@ client.connect_signal("mouse::enter", function(c)
     end
 end)
 
+client.connect_signal("focus", function(c) c.border_color = beautiful.border_focus end)
+client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_normal end)
 -- }}}
 
 
@@ -674,20 +694,6 @@ end)
 my_modules("awm_brightness") -- Brightness
 my_modules("awm_kborderless") -- Remove borders
 
--- Focus border color gradient with examples:
-local focus_gradient_border_fun = my_modules("awm_focus_gradient_border")
--- Focus show briefly in blue before turning to border_focus
-focus_gradient_border_fun("focus", {
-    origin_color = beautiful.border_gradient_blue,
-    target_color = beautiful.border_focus,
-    elapse_time = .6,
-})
--- When a client loses focus, change to border_normal from its current border color fast
-focus_gradient_border_fun("unfocus", {
-    target_color = function(c) return c.focusable and beautiful.border_normal or beautiful.fg_minimize end,
-    elapse_time = .6,
-})
-
 -- Quake terminal
 local quakeconsoles = require("quake"){
    terminal = terminal,
@@ -700,15 +706,11 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
    awful.key({ modkey, "Shift" }, "Return", function() quakeconsoles:toggle() end)
 )))
 
+
 -- Menu + ontop only on floating clients
 my_modules("awm_titleless")(function(c) return quakeconsoles:is_quake_console(c) end)
 
 
--- Smart Mod4+Right/Left
--- Improved from Lain's tag_view_nonempty, but works diffferently whether the screen has clients or not
--- https://github.com/lcpz/lain/wiki/Utilities#tag_view_nonempty
--- This function handles minimized clients
-local gmath = require("gears.math")
 local function smart_mod4_arrow(direction)
    return function(s, dir)
       s = s or awful.screen.focused()
@@ -746,7 +748,7 @@ local function smart_mod4_arrow(direction)
 end
 
 
--- Keys
+--- Keys
 root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
     -- Ranger & thunar (file explorers)
     awful.key({ modkey,           }, "e", function () awful.spawn(terminal.." -e ranger") end, {description = "open file explorer (ranger)", group = "launcher"}),
@@ -784,83 +786,15 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
     awful.key({ modkey,           }, "Up", function () awful.screen.focus_relative( 1) end,
               {description = "focus the next screen", group = "screen"}),
     awful.key({ modkey            }, "Down", function () awful.screen.focus_relative(-1) end,
-              {description = "focus the previous screen", group = "screen"}),
+              {description = "focus the previous screen", group = "screen"})
 
-    -- Mod X makes client unfocusable unless clicked, Mod Shift X makes all clients focusable again
-    awful.key({ modkey,           }, "x", function ()
-       if client.focus then
-          client.focus.focusable = not client.focus.focusable
-       end
-    end, {description = "make client unfocusable unless clicked", group = "client"}),
-    awful.key({ modkey, "Shift"   }, "x", function ()
-       for s in screen do
-          for _, c in pairs(s.all_clients) do
-             if not c.focusable then
-                c.focusable = true
-                c.border_color = beautiful.border_normal
-             end
-          end
-       end
-    end, {description = "make all clients focusable again", group = "client"}),
-
-    -- Media Keys (Play/Next/Previous)
-    -- https://wiki.archlinux.org/index.php/awesome
-    awful.key({}, "XF86AudioPlay", function()
-       awful.spawn("playerctl play-pause", false)
-    end, {description = "play-pause media", group = "media"}),
-    awful.key({}, "XF86AudioNext", function()
-       awful.spawn("playerctl next", false)
-    end, {description = "next media", group = "media"}),
-    awful.key({}, "XF86AudioPrev", function()
-       awful.spawn("playerctl previous", false)
-    end, {description = "previous media", group = "media"})
 )))
 
--- Tags are distributed among screens
--- my_modules("awm_distributed_tags")
+
+
+
+-- Startup programs
+
+awful.util.spawn_with_shell("~/.screenlayout/casa.sh")
 
 -- }}}
-
-awful.util.spawn("nm-applet")
--------------
--- CHANGES --
---- REMOVED: Mod4+w Keybind to open awesome menu removed
---- REMOVED: Layout box widget
---- REMOVED: On Top menu icon and binding
---- REMOVED: On Top only for floating clients
---- REMOVED: Mod4+x lua prompt
---- REMOVED: Some layouts commented
---- REMOVED: Removed borders
---- REMOVED: Removed keyboard layout widget
---- CHANGED: Remap urgent to Mod+ñ
---- CHANGED: Theme
---- CHANGED: Master width factor default to 0.65
---- ADDED: Layout change notification
---- ADDED: Screenshot binding
---- ADDED: Screen lock binding
---- ADDED: File explorer bindings
---- ADDED: Screens layout in Mod4 + Shift + S - XF86Display types Super_L + P instead
---- ADDED: Wibar height and theme variable to control it
---- ADDED: Rule with size_hints_honor = false,
---- ADDED: Notifications max icon size
---- ADDED: Notifications with higher timeout with actions
---- ADDED: Widget separators
---- ADDED: Systray always in the best screen
---- ADDED: Titlebar on floating windows only
---- ADDED: Gradient color on focus (removed signal actions to change color)
---- ADDED: Quake-like dropdown terminal
---- ADDED: Spawn terminal in cwd
---- ADDED: Brightness controls
---- ADDED: Promptbox timeout to clear itself
---- ADDED: Lain FS widget - only where relevant functions are available
---- ADDED: Mod Arrow skips empty tags (wo minimized clients) if current is empty
---- ADDED: Mod u/i behave as mod arrow right and left
---- ADDED: Menu entries to shutdown, reboot and lock the screen with slock
---- ADDED: Menu entries for file explorer, chromium, steam and vlc
---- ADDED: Widget to query pacman and apt for updates
---- ADDED: Mod+ X makes unfocusable client, Mod + Shift + X makes all clients focusable again
---- ADDED: Tags are shared between screens
---- ADDED: CPU and RAM widgets
---- ADDED: Battery widget
---- ADDED: Added media keys (Next/Previous/TogglePlay) through playerctl
-
