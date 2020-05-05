@@ -349,10 +349,6 @@ root.buttons(gears.table.join(
 globalkeys = gears.table.join(
     awful.key({ modkey,           }, "s",      hotkeys_popup.show_help,
               {description="show help", group="awesome"}),
-    awful.key({ modkey,           }, "Left",   awful.tag.viewprev,
-              {description = "view previous", group = "tag"}),
-    awful.key({ modkey,           }, "Right",  awful.tag.viewnext,
-              {description = "view next", group = "tag"}),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore,
               {description = "go back", group = "tag"}),
 
@@ -445,7 +441,7 @@ globalkeys = gears.table.join(
     awful.key({ modkey }, "p", function() menubar.show() end,
               {description = "show the menubar", group = "launcher"}),
 
-    awful.key({ }, "F12", function () awful.util.spawn("gnome-screensaver-command -l") end)
+    awful.key({ modkey }, "F12", function () awful.util.spawn("gnome-screensaver-command -l") end)
 )
 
 clientkeys = gears.table.join(
@@ -709,6 +705,8 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
 
 -- Menu + ontop only on floating clients
 my_modules("awm_titleless")(function(c) return quakeconsoles:is_quake_console(c) end)
+
+local gmath = require("gears.math")
 
 
 local function smart_mod4_arrow(direction)
