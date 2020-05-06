@@ -151,7 +151,7 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 -- }}}
 
 -- Keyboard map indicator and switcher
-mykeyboardlayout = awful.widget.keyboardlayout()
+-- mykeyboardlayout = awful.widget.keyboardlayout()
 
 -- {{{ Wibar
 -- Create a textclock widget
@@ -159,7 +159,7 @@ mytextclock = wibox.widget.textclock(" %b %d - %R ", 45)
 
 
 -- Audio widget
-local volume_widget = my_modules("awm_simple_amixer_volume")
+-- local volume_widget = my_modules("awm_simple_amixer_volume")
 
 -- -- Update check widget
 local pacman_update = my_modules("awm_simple_pacman_widget")()
@@ -187,8 +187,7 @@ local mem_widget = monitor_graph("free", 5,
    {forced_width = 25}
 )
 
--- local fs_widget = require("fs_widget")
-local fs_widget = require("awesome-wm-widgets.fs-widget.fs-widget")
+local fs_widget = require("fs_widget")
 local battery_widget = my_modules("awm_battery_widget")
 local battery_widget_left_sep = battery_widget and beautiful.create_separator_widget(false, true)
 local battery_widget_right_sep = battery_widget and beautiful.create_separator_widget(true, true)
@@ -199,6 +198,11 @@ if battery_widget then
    end
 end
 
+local syncthing_widget = safe_require("awm_simple_syncthing_status")
+syncthing_widget = syncthing_widget and syncthing_widget()
+
+--
+--
 -- Create a wibox for each screen and add it
 local taglist_buttons = gears.table.join(
                     awful.button({ }, 1, function(t) t:view_only() end),
@@ -266,7 +270,7 @@ awful.screen.connect_for_each_screen(function(s)
     awful.tag({ "一", "二", "三", "四", "五", "六", "七", "八", "九"}, s, awful.layout.layouts[1])
 
     -- Create a promptbox for each screen
-    s.mypromptbox = awful.widget.prompt({prompt = "> " })
+    s.mypromptbox = awful.widget.prompt{prompt = "> " }
     -- Create an imagebox widget which will contain an icon indicating which layout we're using.
     -- We need one layoutbox per screen.
     s.mylayoutbox = awful.widget.layoutbox(s)
@@ -318,20 +322,21 @@ awful.screen.connect_for_each_screen(function(s)
 	    mem_widget and beautiful.separator_widget_left_serif,
             mem_widget,
             mem_widget and beautiful.separator_widget_right_serif,
-  --          fs_widget and beautiful.separator_widget_left_serif,
---            fs_widget(),
---            fs_widget and beautiful.separator_widget_right_serif,
+            fs_widget and beautiful.separator_widget_left_serif,
+           -- fs_widget,
+            fs_widget and beautiful.separator_widget_right_serif,
+	    syncthing_widget and beautiful.separator_widget_left_serif,
+            syncthing_widget,
+            syncthing_widget and beautiful.separator_widget_right_serif,
             battery_widget_left_sep,
             battery_widget,
             battery_widget_right_sep,
---	    systray_widget_separators_by_screen_id.left[s],
+	    systray_widget_separators_by_screen_id.left[s],
             wibox.widget.systray(),
---          systray_widget_separators_by_screen_id.right[s],
+            systray_widget_separators_by_screen_id.right[s],
             beautiful.separator_widget_left_serif,
             mytextclock,
             beautiful.separator_widget_right,
-	    s.mylayoutbox,
-            beautiful.separator_widget_left,
         },
     }
 end)
@@ -743,7 +748,7 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
     awful.key({ modkey, "Shift"   }, "e", function () awful.spawn("thunar") end,               {description = "open file explorer (thunar)", group = "launcher"}),
 
     -- Add screenlock program and key
-    awful.key({ modkey,           }, "b", function () awful.spawn("slock") end,                {description = "lock screen"                , group = "awesome"}),
+    awful.key({ modkey,           }, "b", function () awful.spawn("gnome-screensaver-command -l") end,                {description = "lock screen"                , group = "awesome"}),
 
     -- Add Xrandr
     awful.key({ modkey, "Shift"   }, "s", my_modules("awm_dbusxrandr"),                        {description = "Change screen layout"       , group = "awesome"}),
@@ -783,6 +788,6 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
 
 -- Startup programs
 
-awful.util.spawn_with_shell("~/.screenlayout/casa.sh")
+awful.spawn.with_shell("~/.screenlayout/casa.sh")
 
 -- }}}
