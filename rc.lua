@@ -676,16 +676,6 @@ client.connect_signal("unfocus", function(c) c.border_color = beautiful.border_n
 -- Layout change notification
 require("layoutnotification")
 
--- Set systray in preferred primary screen
-require("move_systray")(function(best_screen)
-   for s in screen do
-      systray_widget_separators_by_screen_id.left[s]:set_visible(false)
-      systray_widget_separators_by_screen_id.right[s]:set_visible(false)
-   end
-   systray_widget_separators_by_screen_id.left[best_screen]:set_visible(true)
-   systray_widget_separators_by_screen_id.right[best_screen]:set_visible(true)
-end)
-
 -- My modules
 my_modules("awm_brightness") -- Brightness
 my_modules("awm_kborderless") -- Remove borders
