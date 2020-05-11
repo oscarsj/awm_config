@@ -292,6 +292,9 @@ awful.screen.connect_for_each_screen(function(s)
     systray_widget_separators_by_screen_id.left[s]  = beautiful.create_separator_widget(false, true)
     systray_widget_separators_by_screen_id.right[s] = beautiful.create_separator_widget(true, true)
 
+    s.systray = wibox.widget.systray()
+    s.systray.visible = true
+
     -- Add widgets to the wibox
     s.mywibox:setup {
         layout = wibox.layout.align.horizontal,
@@ -332,7 +335,7 @@ awful.screen.connect_for_each_screen(function(s)
             battery_widget,
             battery_widget_right_sep,
 	    systray_widget_separators_by_screen_id.left[s],
-            wibox.widget.systray(),
+            s.systray,
             systray_widget_separators_by_screen_id.right[s],
             beautiful.separator_widget_left_serif,
             mytextclock,
@@ -789,5 +792,5 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
 -- Startup programs
 
 awful.spawn.with_shell("~/.screenlayout/casa.sh")
-
+awful.spawn.with_shell("nm-applet") -- networkManager applet
 -- }}}
