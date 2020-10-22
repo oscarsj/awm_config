@@ -56,6 +56,32 @@ end
 -- }}}
 
 -- {{{ Variable definitions
+
+
+local themes = {
+    "blackburn",       -- 1
+    "copland",         -- 2
+    "dremora",         -- 3
+    "holo",            -- 4
+    "multicolor",      -- 5
+    "powerarrow",      -- 6
+    "powerarrow-dark", -- 7
+    "rainbow",         -- 8
+    "steamburn",       -- 9
+    "vertex",          -- 10
+}
+
+local chosen_theme = themes[5]
+local modkey       = "Mod4"
+local altkey       = "Mod1"
+local terminal     = "sakura"
+local editor       = os.getenv("EDITOR") or "nano"
+local gui_editor   = "gvim"
+local browser      = "firefox"
+local guieditor    = "atom"
+local scrlocker    = "xlock"
+
+
 -- Themes define colours, icons, font and wallpapers.
 beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
 require("theme_customizer")
@@ -65,7 +91,6 @@ require("theme_customizer")
 require("safe_require")
 
 -- This is used later as the default terminal and editor to run.
-terminal = "sakura"
 editor = os.getenv("EDITOR") or "editor"
 editor_cmd = terminal .. " -e " .. editor
 
@@ -170,11 +195,11 @@ mytextclock = wibox.widget.textclock(" %b %d - %R ", 45)
 local volume_widget = my_modules("awm_simple_amixer_volume")
 
 -- -- Update check widget
-local pacman_update = my_modules("awm_simple_pacman_widget")()
-local apt_update = my_modules("awm_simple_pacman_widget"){
-   check = "bash -c 'apt list --upgradable 2>/dev/null | tail -n +2'",
-   update = terminal .. " -e sudo apt upgrade"
-}
+-- local pacman_update = my_modules("awm_simple_pacman_widget")()
+-- local apt_update = my_modules("awm_simple_pacman_widget"){
+--   check = "bash -c 'apt list --upgradable 2>/dev/null | tail -n +2'",
+--   update = terminal .. " -e sudo apt upgrade"
+--}
 
 -- -- Resources widgets
 local monitor_graph = require("monitor_graph")
