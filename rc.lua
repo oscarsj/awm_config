@@ -71,7 +71,7 @@ local themes = {
     "vertex",          -- 10
 }
 
-local chosen_theme = themes[5]
+local chosen_theme = themes[1]
 local modkey       = "Mod4"
 local altkey       = "Mod1"
 local terminal     = "sakura"
@@ -81,10 +81,23 @@ local browser      = "firefox"
 local guieditor    = "atom"
 local scrlocker    = "xlock"
 
+lain.layout.termfair.nmaster           = 3
+lain.layout.termfair.ncol              = 1
+lain.layout.termfair.center.nmaster    = 3
+lain.layout.termfair.center.ncol       = 1
+lain.layout.cascade.tile.offset_x      = 2
+lain.layout.cascade.tile.offset_y      = 32
+lain.layout.cascade.tile.extra_padding = 5
+lain.layout.cascade.tile.nmaster       = 5
+lain.layout.cascade.tile.ncol          = 2
+
 
 -- Themes define colours, icons, font and wallpapers.
-beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
-require("theme_customizer")
+-- beautiful.init(gears.filesystem.get_themes_dir() .. "default/theme.lua")
+local theme_path = string.format("%s/.config/awesome/themes/%s/theme.lua", os.getenv("HOME"), chosen_theme)
+beautiful.init(theme_path)
+
+-- require("theme_customizer")
 
 
 -- Safe require
@@ -102,6 +115,7 @@ editor_cmd = terminal .. " -e " .. editor
 modkey = "Mod4"
 
 -- Table of layouts to cover with awful.layout.inc, order matters.
+awful.util.terminal = terminal
 awful.layout.layouts = {
 --    awful.layout.suit.floating,
 --    awful.layout.suit.tile,
@@ -222,8 +236,8 @@ local mem_widget = monitor_graph("free", 5,
 
 local fs_widget = require("fs_widget")
 local battery_widget = my_modules("awm_battery_widget")
-local battery_widget_left_sep = battery_widget and beautiful.create_separator_widget(false, true)
-local battery_widget_right_sep = battery_widget and beautiful.create_separator_widget(true, true)
+-- local battery_widget_left_sep = battery_widget and beautiful.create_separator_widget(false, true)
+-- local battery_widget_right_sep = battery_widget and beautiful.create_separator_widget(true, true)
 if battery_widget then
    battery_widget.on_visible_callback = function(widget, visible)
       battery_widget_left_sep:set_visible(visible)
@@ -322,8 +336,8 @@ awful.screen.connect_for_each_screen(function(s)
     s.mywibox = awful.wibar({ position = "top", screen = s, height = beautiful.wibar_height})
     --
     -- Systray separators widget
-    systray_widget_separators_by_screen_id.left[s]  = beautiful.create_separator_widget(false, true)
-    systray_widget_separators_by_screen_id.right[s] = beautiful.create_separator_widget(true, true)
+--    systray_widget_separators_by_screen_id.left[s]  = beautiful.create_separator_widget(false, true)
+--    systray_widget_separators_by_screen_id.right[s] = beautiful.create_separator_widget(true, true)
 
     s.systray = wibox.widget.systray()
     s.systray.visible = true
