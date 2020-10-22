@@ -79,7 +79,7 @@ local editor       = os.getenv("EDITOR") or "nano"
 local gui_editor   = "gvim"
 local browser      = "firefox"
 local guieditor    = "atom"
-local scrlocker    = "xlock"
+local scrlocker    = "xscreensaver"
 
 lain.layout.termfair.nmaster           = 3
 lain.layout.termfair.ncol              = 1
@@ -170,7 +170,7 @@ local menu_terminal = {
       { "Open: Steam", "steam" },
       { "SESSION: shutdown", "poweroff"},
       { "SESSION: reboot", "reboot"},
-      { "SESSION: lock", "gnome-screensaver-command -l"},
+      { "SESSION: lock", "xscreensaver-command -lock"},
       { "SESSION: suspend", "systemctl suspend"}
 }
 
@@ -798,7 +798,7 @@ root.keys(awful.util.table.join(root.keys(), awful.util.table.join(
     awful.key({ modkey, "Shift"   }, "e", function () awful.spawn("thunar") end,               {description = "open file explorer (thunar)", group = "launcher"}),
 
     -- Add screenlock program and key
-    awful.key({ modkey,           }, "b", function () awful.spawn("gnome-screensaver-command -l") end,                {description = "lock screen"                , group = "awesome"}),
+    awful.key({ modkey,           }, "b", function () awful.spawn("xscreensaver-command -lock") end,                {description = "lock screen"                , group = "awesome"}),
 
     -- Add Xrandr
     awful.key({ modkey, "Shift"   }, "s", my_modules("awm_dbusxrandr"),                        {description = "Change screen layout"       , group = "awesome"}),
