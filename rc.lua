@@ -15,7 +15,9 @@ local lain      = require("lain")
 -- Notification library
 local naughty = require("naughty")
 local menubar = require("menubar")
+local freedesktop   = require("freedesktop")
 local hotkeys_popup = require("awful.hotkeys_popup").widget
+local my_table      = awful.util.table or gears.table -- 4.{0,1} compatibility
 -- Enable hotkeys help widget for VIM and other apps
 -- when client with a matching name is opened:
 require("awful.hotkeys_popup.keys")
